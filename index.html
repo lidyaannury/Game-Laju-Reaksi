@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Laju Reaksi — Kimia Kelas XI</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:black;
+color:white;
+overflow:hidden;
+}
+
+/* CONTROL */
+
+.controlPanel{
+position:fixed;
+top:15px;
+right:20px;
+display:flex;
+gap:10px;
+z-index:9999;
+}
+
+.ctrlBtn{
+background:#222;
+padding:8px 14px;
+border-radius:10px;
+cursor:pointer;
+font-weight:bold;
+border:1px solid #444;
+}
+
+.ctrlBtn:hover:not(:disabled){
+background:gold;
+color:black;
+}
+
+.ctrlBtn:disabled{
+opacity:0.4;
+cursor:not-allowed;
+border-color:#222;
+}
+
+/* HALAMAN AWAL */
+
+#awal{
+background:linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("assets/bg-awal.png") center/cover #0f172a;
+position:absolute;
+inset:0;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+}
+
+.masukBtn{
+position:absolute;
+bottom:120px;
+left:50%;
+transform:translateX(-50%);
+width:290px;
+cursor:pointer;
+transition:.3s;
+}
+
+.masukBtn:hover{
+transform:translateX(-50%) scale(1.1);
+}
+
+/* INTRO */
+
+#intro{
+background:linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("assets/bg-intro.png") center/cover #0f172a;
+position:absolute;
+inset:0;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+}
+
+/* WRAPPER TOMBOL INTRO */
+.introButtons{
+position:absolute;
+bottom:16%;
+left:50%;
+transform:translateX(-50%);
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:12px;
+z-index:10;
+}
+
+.btn-main{width:220px;cursor:pointer;transition:.3s;}
+
+.btn-main:hover{
+transform:scale(1.08);
+}
+
+/* TEMPLATE SOAL */
+
+.questionBox{
+background:linear-gradient(180deg,#0c1c4d,#06123a);
+border:3px solid #3aa7ff;
+border-radius:40px;
+padding:20px 40px;
+text-align:center;
+font-size:22px;
+font-weight:bold;
+color:white;
+box-shadow:
+0 0 20px rgba(0,150,255,0.6),
+inset 0 0 15px rgba(0,0,0,0.8);
+}
+
+.answerGrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:18px;
+}
+
+.answer{
+background:linear-gradient(90deg,#0a2a8a,#1f7fff);
+border:3px solid #3aa7ff;
+border-radius:40px;
+padding:14px 26px;
+font-size:18px;
+font-weight:bold;
+color:white;
+cursor:pointer;
+display:flex;
+align-items:center;
+gap:10px;
+box-shadow:0 0 15px rgba(0,120,255,0.6);
+transition:0.25s;
+}
+
+.answer:hover{
+background:linear-gradient(90deg,#ffd700,#ffb300);
+color:black;
+border-color:gold;
+transform:scale(1.05);
+}
+
+.opt{
+color:#ffd700;
+font-weight:900;
+}
+
+/* EFEK BERKEDIP JAWABAN BENAR & SALAH */
+
+@keyframes blinkGreen {
+  0%, 100% { background: linear-gradient(90deg,#0a2a8a,#1f7fff); border-color: #3aa7ff; }
+  50% { background: linear-gradient(90deg, #10b981, #059669); border-color: #34d399; box-shadow: 0 0 30px #10b981; color: white; }
+}
+
+@keyframes blinkRed {
+  0%, 100% { background: linear-gradient(90deg,#0a2a8a,#1f7fff); border-color: #3aa7ff; }
+  50% { background: linear-gradient(90deg, #ef4444, #dc2626); border-color: #f87171; box-shadow: 0 0 30px #ef4444; color: white; }
+}
+
+.blink-correct {
+  animation: blinkGreen 0.35s ease-in-out infinite !important;
+}
+
+.blink-wrong {
+  animation: blinkRed 0.35s ease-in-out infinite !important;
+}
+
+.ladder{
+padding:6px;
+font-weight:bold;
+color:gold;
+}
+
+.active{
+background:gold;
+color:black;
+box-shadow:0 0 20px gold;
+}
+
+.hidden{
+display:none !important;
+}
+
+/* DESAIN MODAL BANTUAN ELEGAN & MEWAH */
+
+.modalOverlay {
+position: fixed;
+inset: 0;
+background: rgba(0, 0, 0, 0.85);
+backdrop-filter: blur(8px);
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 10000;
+}
+
+.modalCard {
+background: linear-gradient(145deg, #091736, #020a1c);
+border: 2px solid #ffd700;
+border-radius: 28px;
+padding: 32px;
+width: 90%;
+max-width: 480px;
+text-align: center;
+box-shadow: 0 0 35px rgba(255, 215, 0, 0.3), inset 0 0 20px rgba(0, 150, 255, 0.2);
+animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalPop {
+0% { transform: scale(0.8); opacity: 0; }
+100% { transform: scale(1); opacity: 1; }
+}
+
+.textGold {
+color: #ffd700;
+text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.modalBtn {
+background: linear-gradient(90deg, #ffd700, #ff9900);
+color: #000;
+font-weight: bold;
+font-size: 18px;
+padding: 10px 32px;
+border-radius: 30px;
+cursor: pointer;
+border: none;
+box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+transition: 0.2s;
+}
+
+.modalBtn:hover {
+transform: scale(1.05);
+box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+}
+
+/* DESAIN GRAPH BAR POLLING */
+
+.barContainer {
+display: flex;
+align-items: center;
+gap: 14px;
+margin-bottom: 12px;
+}
+
+.barLabel {
+font-weight: 900;
+color: #ffd700;
+width: 28px;
+font-size: 18px;
+}
+
+.barTrack {
+flex: 1;
+height: 24px;
+background: rgba(255, 255, 255, 0.08);
+border-radius: 12px;
+overflow: hidden;
+border: 1px solid rgba(58, 167, 255, 0.4);
+position: relative;
+}
+
+.barFill {
+height: 100%;
+background: linear-gradient(90deg, #00c6ff, #0072ff);
+width: 0%;
+transition: width 1s ease-out;
+border-radius: 12px;
+box-shadow: 0 0 12px rgba(0, 198, 255, 0.8);
+}
+
+.barValue {
+width: 50px;
+text-align: right;
+font-weight: bold;
+font-size: 16px;
+color: #fff;
+}
+
+/* RESULT */
+
+#resultScreen{
+position:absolute;
+inset:0;
+background:rgba(0,0,0,0.95);
+display:none;
+align-items:center;
+justify-content:center;
+flex-direction:column;
+z-index:999;
+}
+
+
+/* ===== PENYESUAIAN UNTUK GAME ONLINE ===== */
+html, body { width:100%; height:100%; margin:0; }
+#game { min-height:100vh; }
+@media (max-width: 800px) {
+  body { overflow:auto; }
+  #game { position:relative !important; min-height:100vh; flex-direction:column; padding:14px !important; gap:12px !important; }
+  #game > .flex-1 { margin-bottom:10px !important; }
+  #ladder { width:auto !important; max-height:170px; overflow:auto; margin-top:0 !important; }
+  .questionBox { font-size:18px; padding:15px 18px; border-radius:22px; }
+  .answerGrid { grid-template-columns:1fr !important; gap:10px; }
+  .answer { font-size:16px; padding:12px 16px; border-radius:22px; }
+  .controlPanel { top:8px; right:8px; }
+  .ctrlBtn { padding:7px 10px; }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="controlPanel">
+<div class="ctrlBtn" onclick="zoomGame()">🔍 Zoom</div>
+<div class="ctrlBtn" onclick="goHome()">🏠 Home</div>
+</div>
+
+<audio id="bgm" src="assets/bgm.mp3" loop></audio>
+<audio id="benar" src="assets/benar.mp3"></audio>
+<audio id="salah" src="assets/salah.mp3"></audio>
+
+<!-- GAME: langsung dimulai saat halaman dibuka -->
+
+<div id="game" class="absolute inset-0 p-6 flex gap-6"
+style="background:linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('assets/bg-permainan.png') center/cover #0b132b">
+
+<div class="flex-1 flex flex-col justify-end mb-24">
+
+<!-- PANEL BANTUAN -->
+<div class="flex gap-4 mb-4 justify-center">
+<button id="btn5050" class="ctrlBtn text-lg px-6 py-2" onclick="use5050()">50:50</button>
+<button id="btnPhone" class="ctrlBtn text-lg px-6 py-2" onclick="usePhone()">📞 Telepon</button>
+<button id="btnAudience" class="ctrlBtn text-lg px-6 py-2" onclick="useAudience()">👥 Penonton</button>
+</div>
+
+<div class="questionBox mb-6">
+<h2 id="question"></h2>
+</div>
+
+<div class="answerGrid" id="answerGrid">
+
+<div class="answer" onclick="answer(0)">
+<span class="opt">A:</span> <span id="a0"></span>
+</div>
+
+<div class="answer" onclick="answer(1)">
+<span class="opt">B:</span> <span id="a1"></span>
+</div>
+
+<div class="answer" onclick="answer(2)">
+<span class="opt">C:</span> <span id="a2"></span>
+</div>
+
+<div class="answer" onclick="answer(3)">
+<span class="opt">D:</span> <span id="a3"></span>
+</div>
+
+</div>
+
+</div>
+
+<div id="ladder" class="w-56 bg-black/70 rounded-xl p-4 mt-16"></div>
+
+</div>
+
+<!-- MODAL TELEPON TEMAN -->
+<div id="modalPhone" class="modalOverlay hidden">
+  <div class="modalCard">
+    <div class="textGold text-2xl font-bold mb-4 flex items-center justify-center gap-2">
+      <span>📞</span> Telepon Teman
+    </div>
+    <div class="w-20 h-20 mx-auto mb-4 rounded-full border-2 border-yellow-400 flex items-center justify-center bg-blue-950/80 shadow-[0_0_15px_rgba(255,215,0,0.5)]">
+      <span class="text-4xl">👨‍🔬</span>
+    </div>
+    <p class="text-gray-300 italic mb-2 text-base">“Halo! Menurut saya, jawaban yang benar adalah…”</p>
+    <div id="phoneText" class="text-3xl font-extrabold textGold mb-6"></div>
+    <button onclick="closeModal('modalPhone')" class="modalBtn">Mengerti</button>
+  </div>
+</div>
+
+<!-- MODAL POLLING PENONTON -->
+<div id="modalAudience" class="modalOverlay hidden">
+  <div class="modalCard">
+    <div class="textGold text-2xl font-bold mb-6 flex items-center justify-center gap-2">
+      <span>👥</span> Hasil Polling Penonton
+    </div>
+    <div id="audienceBars" class="mb-6 flex flex-col gap-1"></div>
+    <button onclick="closeModal('modalAudience')" class="modalBtn">Tutup</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+
+<div id="resultScreen">
+
+<h1 class="text-5xl text-red-500 mb-6 font-bold">
+Permainan Selesai
+</h1>
+
+<p class="text-2xl mb-2">
+Skor / Hadiah Perolehan:
+</p>
+
+<div id="hasilUang" class="text-4xl text-yellow-400 mb-10 font-bold"></div>
+
+<button onclick="restartGame()"
+class="bg-green-600 hover:bg-green-700 px-10 py-3 rounded-full text-xl font-bold">
+Main Lagi
+</button>
+
+</div>
+
+<script>
+
+/* BANK SOAL KIMIA KELAS XI - MATERI LAJU REAKSI & FAKTOR LAJU REAKSI */
+const bankSoalBesar = [
+  {
+    q: "Pengertian laju reaksi yang paling tepat adalah...",
+    answers: [
+      "Penambahan konsentrasi reaktan per satuan waktu",
+      "Berkurangnya konsentrasi produk per satuan waktu",
+      "Berkurangnya konsentrasi reaktan per satuan waktu",
+      "Penambahan volume zat hasil reaksi per satuan waktu"
+    ],
+    correct: 2
+  },
+  {
+    q: "Faktor berikut yang TIDAK mempengaruhi laju reaksi adalah...",
+    answers: [
+      "Suhu",
+      "Konsentrasi",
+      "Luas permukaan",
+      "Warna zat reaktan"
+    ],
+    correct: 3
+  },
+  {
+    q: "Mengapa kenaikan suhu dapat mempercepat laju reaksi?",
+    answers: [
+      "Menurunkan energi aktivasi",
+      "Meningkatkan energi kinetik partikel",
+      "Meningkatkan konsentrasi reaktan",
+      "Memperluas permukaan bidang sentuh"
+    ],
+    correct: 1
+  },
+  {
+    q: "Pengaruh luas permukaan sentuh terhadap laju reaksi terjadi pada reaksi yang melibatkan pereaksi fase...",
+    answers: [
+      "Gas dan gas",
+      "Cair dan cair",
+      "Padat dan cair",
+      "Gas dan cair"
+    ],
+    correct: 2
+  },
+  {
+    q: "Fungsi utama dari penambahan katalis dalam suatu reaksi kimia adalah...",
+    answers: [
+      "Meningkatkan energi kinetik molekul",
+      "Menurunkan energi aktivasi (Ea)",
+      "Meningkatkan jumlah produk akhir",
+      "Mengubah reaksi endoterm menjadi eksoterm"
+    ],
+    correct: 1
+  },
+  {
+    q: "Di antara bentuk zat berikut yang memiliki luas permukaan bidang sentuh paling besar jika massanya sama adalah...",
+    answers: [
+      "Serbuk halus",
+      "Kepingan kecil",
+      "Bongkahan besar",
+      "Batangan utuh"
+    ],
+    correct: 0
+  },
+  {
+    q: "Reaksi antara batu kapur (CaCO3) dengan larutan HCl akan berlangsung paling cepat jika CaCO3 berbentuk...",
+    answers: [
+      "Bongkahan dan HCl 0,1 M",
+      "Serbuk dan HCl 2,0 M",
+      "Kepingan dan HCl 1,0 M",
+      "Serbuk dan HCl 0,5 M"
+    ],
+    correct: 1
+  },
+  {
+    q: "Energi minimum yang diperlukan oleh molekul-molekul reaktan agar dapat bereaksi disebut...",
+    answers: [
+      "Energi kinetik",
+      "Energi potensial",
+      "Energi aktivasi",
+      "Energi ikat"
+    ],
+    correct: 2
+  },
+  {
+    q: "Teori yang menjelaskan tentang bagaimana reaktan saling bertumbukan hingga menghasilkan produk disebut...",
+    answers: [
+      "Teori Tumbukan",
+      "Teori Kinetik Gas",
+      "Teori Termodinamika",
+      "Teori Ikatan Valensi"
+    ],
+    correct: 0
+  },
+  {
+    q: "Setiap kenaikan suhu 10°C, laju reaksi menjadi 2 kali lebih cepat. Jika reaksi berlangsung 80 detik pada 30°C, berapa waktu reaksi pada 50°C?",
+    answers: [
+      "40 detik",
+      "20 detik",
+      "10 detik",
+      "5 detik"
+    ],
+    correct: 1
+  },
+  {
+    q: "Bagaimanakah pengaruh peningkatan konsentrasi reaktan terhadap tumbukan antar partikel?",
+    answers: [
+      "Menurunkan frekuensi tumbukan",
+      "Meningkatkan jumlah partikel per satuan volume sehingga tumbukan makin sering",
+      "Menurunkan energi kinetik partikel",
+      "Meningkatkan energi aktivasi reaksi"
+    ],
+    correct: 1
+  },
+  {
+    q: "Katalis yang fase/wujudnya berbeda dengan fase zat-zat pereaksi disebut katalis...",
+    answers: [
+      "Homogen",
+      "Heterogen",
+      "Autokatalis",
+      "Inhibitor"
+    ],
+    correct: 1
+  },
+  {
+    q: "Zat yang terbentuk selama reaksi dan dapat mempercepat reaksinya sendiri disebut...",
+    answers: [
+      "Inhibitor",
+      "Katalis heterogen",
+      "Autokatalis",
+      "Racun katalis"
+    ],
+    correct: 2
+  },
+  {
+    q: "Manakah tindakan di bawah ini yang memanfaatkan prinsip faktor luas permukaan?",
+    answers: [
+      "Laju reaksi penyimpanan makanan di lemari es",
+      "Mengunyah makanan hingga halus sebelum ditelan",
+      "Penggunaan ragi pada pembuatan tempe",
+      "Pembuatan asam sulfat dengan proses kontak"
+    ],
+    correct: 1
+  },
+  {
+    q: "Untuk reaksi A + B -> C, jika konsentrasi A dinaikkan 2 kali dan konsentrasi B tetap, laju reaksi menjadi 4 kali semula. Orde reaksi terhadap A adalah...",
+    answers: [
+      "0",
+      "1",
+      "2",
+      "3"
+    ],
+    correct: 2
+  },
+  {
+    q: "Jika persamaan laju reaksi v = k [A]^1 [B]^2, maka orde total reaksi tersebut adalah...",
+    answers: [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    correct: 2
+  },
+  {
+    q: "Satuan laju reaksi pada umumnya dinyatakan dalam...",
+    answers: [
+      "Mol / liter",
+      "Molar / detik (M/s)",
+      "Gram / liter",
+      "Detik / Molar"
+    ],
+    correct: 1
+  },
+  {
+    q: "Mengapa daging yang disimpan di dalam freezer lemari es lebih tahan lama dan tidak cepat busuk?",
+    answers: [
+      "Suhu rendah memperlambat laju reaksi pembusukan oleh mikroorganisme",
+      "Suhu rendah memperluas permukaan daging",
+      "Katalis pembusukan rusak pada suhu rendah",
+      "Konsentrasi air dalam daging berkurang"
+    ],
+    correct: 0
+  },
+  {
+    q: "Tumbukan antar partikel reaktan yang berhasil menghasilkan reaksi kimia disebut tumbukan...",
+    answers: [
+      "Lenting sempurna",
+      "Efektif",
+      "Sebagian",
+      "Inersia"
+    ],
+    correct: 1
+  },
+  {
+    q: "Zat yang sengaja ditambahkan untuk memperlambat atau menghentikan laju reaksi dinamakan...",
+    answers: [
+      "Katalisator",
+      "Promotor",
+      "Inhibitor",
+      "Enzim"
+    ],
+    correct: 2
+  }
+];
+
+/* FULLSCREEN SAAT INTERAKSI PERTAMA (jika diizinkan browser) */
+document.addEventListener('click', function autoFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    }
+});
+
+function masukGame(){
+document.getElementById("awal").classList.add("hidden")
+document.getElementById("intro").classList.remove("hidden")
+}
+
+function goHome(){
+location.reload();
+}
+
+function zoomGame(){
+if(!document.fullscreenElement){
+document.documentElement.requestFullscreen()
+}else{
+document.exitFullscreen()
+}
+}
+
+function shuffle(array){
+for(let i=array.length-1;i>0;i--){
+const j=Math.floor(Math.random()*(i+1));
+[array[i],array[j]]=[array[j],array[i]];
+}
+return array
+}
+
+let bankSoal=[]
+let level=0
+let used5050 = false
+let usedPhone = false
+let usedAudience = false
+let isAnswering = false
+
+const ladderMoney=[
+"Rp100.000","Rp200.000","Rp300.000","Rp500.000","Rp1.000.000",
+"Rp2.000.000","Rp5.000.000","Rp10.000.000","Rp25.000.000",
+"Rp50.000.000","Rp100.000.000","Rp250.000.000","Rp500.000.000",
+"Rp750.000.000","Rp1.000.000.000"
+]
+
+function startGame(){
+/* Ambil 15 soal acak dari bankSoalBesar */
+bankSoal = shuffle([...bankSoalBesar]).slice(0,15)
+
+let bgm=document.getElementById("bgm")
+bgm.currentTime=0
+bgm.play().catch(()=>{})
+
+level=0
+
+/* Reset Status Bantuan */
+used5050 = false
+usedPhone = false
+usedAudience = false
+
+document.getElementById("btn5050").disabled = false
+document.getElementById("btnPhone").disabled = false
+document.getElementById("btnAudience").disabled = false
+
+load()
+}
+
+function load(){
+
+let q=bankSoal[level]
+
+document.getElementById("question").innerText=q.q
+
+for(let i=0;i<4;i++){
+let aSpan = document.getElementById("a"+i)
+let parent = aSpan.parentElement
+parent.style.visibility = "visible"
+parent.classList.remove("blink-correct", "blink-wrong")
+aSpan.innerText=q.answers[i]
+}
+
+isAnswering = false
+drawLadder()
+}
+
+function drawLadder(){
+
+let ladder=document.getElementById("ladder")
+ladder.innerHTML=""
+
+for(let i=ladderMoney.length-1;i>=0;i--){
+
+let d=document.createElement("div")
+d.className="ladder"+(i===level?" active":"")
+d.innerText=(i+1)+". "+ladderMoney[i]
+
+ladder.appendChild(d)
+
+}
+}
+
+function answer(i){
+
+if(isAnswering) return
+isAnswering = true
+
+let q=bankSoal[level]
+let selectedAnsElem = document.getElementById("a" + i).parentElement
+
+if(i===q.correct){
+
+selectedAnsElem.classList.add("blink-correct")
+document.getElementById("benar").play().catch(()=>{})
+
+setTimeout(() => {
+level++
+if(level>=15){
+endGame()
+}else{
+load()
+}
+}, 1500)
+
+}else{
+
+selectedAnsElem.classList.add("blink-wrong")
+document.getElementById("salah").play().catch(()=>{})
+
+setTimeout(() => {
+endGame()
+}, 1500)
+
+}
+
+}
+
+/* LOGIKA BANTUAN MODAL ELEGAN */
+
+function closeModal(id){
+document.getElementById(id).classList.add("hidden")
+}
+
+function use5050(){
+if(used5050 || isAnswering) return
+used5050 = true
+document.getElementById("btn5050").disabled = true
+
+let q = bankSoal[level]
+let wrongIndices = []
+
+for(let i=0; i<4; i++){
+if(i !== q.correct) wrongIndices.push(i)
+}
+
+shuffle(wrongIndices)
+
+document.getElementById("a" + wrongIndices[0]).parentElement.style.visibility = "hidden"
+document.getElementById("a" + wrongIndices[1]).parentElement.style.visibility = "hidden"
+}
+
+function usePhone(){
+if(usedPhone || isAnswering) return
+usedPhone = true
+document.getElementById("btnPhone").disabled = true
+
+let q = bankSoal[level]
+let labels = ["A", "B", "C", "D"]
+let suggestedIndex
+
+if(Math.random() < 0.8){
+suggestedIndex = q.correct
+}else{
+let wrong = [0,1,2,3].filter(i => i !== q.correct)
+suggestedIndex = wrong[Math.floor(Math.random() * wrong.length)]
+}
+
+document.getElementById("phoneText").innerText = "Pilihan " + labels[suggestedIndex]
+document.getElementById("modalPhone").classList.remove("hidden")
+}
+
+function useAudience(){
+if(usedAudience || isAnswering) return
+usedAudience = true
+document.getElementById("btnAudience").disabled = true
+
+let q = bankSoal[level]
+let labels = ["A", "B", "C", "D"]
+
+let correctPct = Math.floor(Math.random() * 30) + 55
+let remaining = 100 - correctPct
+
+let pcts = [0, 0, 0, 0]
+pcts[q.correct] = correctPct
+
+let wrongIndices = [0, 1, 2, 3].filter(i => i !== q.correct)
+let p1 = Math.floor(Math.random() * remaining)
+let p2 = Math.floor(Math.random() * (remaining - p1))
+let p3 = remaining - p1 - p2
+
+pcts[wrongIndices[0]] = p1
+pcts[wrongIndices[1]] = p2
+pcts[wrongIndices[2]] = p3
+
+let barsContainer = document.getElementById("audienceBars")
+barsContainer.innerHTML = ""
+
+for(let i = 0; i < 4; i++) {
+barsContainer.innerHTML += `
+<div class="barContainer">
+  <span class="barLabel">${labels[i]}:</span>
+  <div class="barTrack">
+    <div class="barFill" id="barFill${i}" style="width: 0%"></div>
+  </div>
+  <span class="barValue">${pcts[i]}%</span>
+</div>
+`
+}
+
+document.getElementById("modalAudience").classList.remove("hidden")
+
+setTimeout(() => {
+for(let i = 0; i < 4; i++) {
+  let fill = document.getElementById("barFill" + i)
+  if(fill) fill.style.width = pcts[i] + "%"
+}
+}, 50)
+}
+
+function endGame(){
+
+document.getElementById("bgm").pause()
+
+let uang = level>0 ? ladderMoney[level-1] : "Rp0"
+
+document.getElementById("hasilUang").innerText = uang
+
+document.getElementById("resultScreen").style.display="flex"
+
+}
+
+function restartGame(){
+location.reload()
+}
+
+/* MULAI OTOMATIS: siswa membuka link -> langsung masuk ke soal */
+window.addEventListener("DOMContentLoaded", () => {
+  startGame();
+});
+
+/* Mulai musik setelah interaksi pertama karena browser biasanya memblokir autoplay audio. */
+document.addEventListener("pointerdown", () => {
+  const bgm = document.getElementById("bgm");
+  if (bgm && bgm.paused) bgm.play().catch(() => {});
+}, { once: true });
+
+</script>
+
+</body>
+</html>
